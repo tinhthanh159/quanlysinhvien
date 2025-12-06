@@ -54,6 +54,19 @@
                         <a class="nav-link {{ request()->routeIs('student.grades') ? 'active' : '' }}"
                             href="{{ route('student.grades') }}">Kết quả học tập</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('student.notifications.*') ? 'active' : '' }} d-flex justify-content-between align-items-center"
+                            href="{{ route('student.notifications.index') }}">
+                            <span><i class="fas fa-bell me-1"></i> Thông báo</span>
+                            @php
+                                $unreadCount = Auth::user()->unreadNotifications->count();
+                            @endphp
+                            @if ($unreadCount > 0 && !request()->routeIs('student.notifications.index'))
+                                <span id="notification-count-badge"
+                                    class="badge bg-danger rounded-pill">{{ $unreadCount }}</span>
+                            @endif
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
@@ -62,7 +75,7 @@
                             Xin chào, {{ Auth::user()->name ?? 'Sinh viên' }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Hồ sơ cá nhân</a></li>
+                            <li><a class="dropdown-item" href="{{ route('student.profile') }}">Hồ sơ cá nhân</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -94,11 +107,24 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="alert alert-danger alert-floating alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i> Vui lòng kiểm tra lại thông tin:
+                <ul class="mb-0 mt-1 ps-3">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="animate-fade-in-up">
             @yield('content')
         </div>
     </div>
 
+    @stack('modals')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -112,6 +138,7 @@
             });
         });
     </script>
+    @stack('scripts')
 </body>
 
 </html>

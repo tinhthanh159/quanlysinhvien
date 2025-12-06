@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Pagination\Paginator::useBootstrapFive();
         Route::aliasMiddleware('role', CheckRole::class);
         \App\Models\Grade::observe(\App\Observers\GradeObserver::class);
     }

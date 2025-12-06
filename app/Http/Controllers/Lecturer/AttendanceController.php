@@ -88,4 +88,97 @@ class AttendanceController extends Controller
 
         return back()->with('success', 'Cập nhật điểm danh thành công');
     }
+
+
+    public function getAttendanceData(CourseClass $courseClass, AttendanceSession $session)
+    {
+        $this->checkOwnership($courseClass);
+
+        // Check if session should be closed
+        $now = now();
+        // session_date is cast to Carbon, so format it to Y-m-d string first
+        $endTime = \Carbon\Carbon::parse($session->session_date->format('Y-m-d') . ' ' . $session->end_time);
+
+        if ($session->status == 'open' && $now->greaterThan($endTime)) {
+            $session->status = 'closed';
+            $session->save();
+        }
+
+        $attendances = $session->attendances()->select('student_id', 'status')->get();
+
+        return response()->json([
+            'attendances' => $attendances,
+            'status' => $session->status,
+            'is_expired' => $now->greaterThan($endTime),
+        ]);
+    }
+    public function refreshQr(CourseClass $courseClass, AttendanceSession $session)
+    {
+        $this->checkOwnership($courseClass);
+
+        if ($session->status !== 'open') {
+            return response()->json(['error' => 'Session closed'], 400);
+        }
+
+        // Generate new token
+        $newToken = Str::random(32);
+        $session->save();
+
+        // Generate new QR Code
+        $qrCode = QrCode::size(200)->generate(route('attendance.checkin', ['token' => $newToken]));
+
+        return response()->json([
+            'qr_code' => (string) $qrCode,
+        ]);
+    }
+
+    public function statistics(CourseClass $courseClass)
+    {
+        $students = $courseClass->students;
+        $sessions = $courseClass->attendanceSessions()->where('status', 'closed')->get();
+        $totalSessions = $sessions->count();
+
+        foreach ($students as $student) {
+            $attendances = \App\Models\Attendance::whereIn('attendance_session_id', $sessions->pluck('id'))
+                ->where('student_id', $student->id)
+                ->get();
+
+            $student->present_count = $attendances->where('status', 'present')->count();
+            $student->late_count = $attendances->where('status', 'late')->count();
+            $student->absent_count = $attendances->where('status', 'absent')->count();
+
+            // If no attendance record exists for a closed session, it counts as absent
+            $recordedSessions = $attendances->count();
+            $student->absent_count += ($totalSessions - $recordedSessions);
+
+            $student->absence_percentage = $totalSessions > 0 ? ($student->absent_count / $totalSessions) * 100 : 0;
+        }
+
+        return view('lecturer.attendance.statistics', compact('courseClass', 'students', 'totalSessions'));
+    }
+
+    public function sendBanEmail(CourseClass $courseClass, \App\Models\Student $student)
+    {
+        $this->checkOwnership($courseClass);
+
+        // Calculate absences again to be sure
+        $sessions = $courseClass->attendanceSessions()->where('status', 'closed')->get();
+        $totalSessions = $sessions->count();
+
+        $attendances = \App\Models\Attendance::whereIn('attendance_session_id', $sessions->pluck('id'))
+            ->where('student_id', $student->id)
+            ->get();
+
+        $recordedSessions = $attendances->count();
+        $absentCount = $attendances->where('status', 'absent')->count();
+        $absentCount += ($totalSessions - $recordedSessions);
+
+        if ($absentCount < 3) {
+            return back()->with('error', 'Sinh viên này chưa đủ điều kiện cấm thi (vắng < 3 buổi).');
+        }
+
+        \Illuminate\Support\Facades\Mail::to($student->email)->send(new \App\Mail\ExamBanMail($student, $courseClass, $absentCount));
+
+        return back()->with('success', 'Đã gửi email thông báo cấm thi cho sinh viên ' . $student->full_name);
+    }
 }

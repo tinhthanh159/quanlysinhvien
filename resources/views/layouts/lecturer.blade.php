@@ -82,6 +82,10 @@
                     class="{{ request()->routeIs('lecturer.classes.*') ? 'active' : '' }}">
                     <i class="fas fa-chalkboard-teacher"></i> Lớp học phần
                 </a>
+                <a href="{{ route('lecturer.notifications.index') }}"
+                    class="{{ request()->routeIs('lecturer.notifications.*') ? 'active' : '' }}">
+                    <i class="fas fa-bell"></i> Quản lý thông báo
+                </a>
             </div>
         </div>
 
@@ -107,9 +111,31 @@
         </div>
     </div>
 
+    @stack('modals')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // SweetAlert2 for Session Messages
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: "{{ session('success') }}",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            @endif
+
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: "{{ session('error') }}",
+                });
+            @endif
+
+
             // Auto-hide alerts after 2 seconds
             const alerts = document.querySelectorAll('.alert-floating');
             alerts.forEach(function(alert) {
@@ -120,6 +146,8 @@
             });
         });
     </script>
+    @stack('scripts')
 </body>
+
 
 </html>

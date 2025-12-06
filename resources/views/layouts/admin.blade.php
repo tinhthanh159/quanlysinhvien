@@ -81,8 +81,7 @@
                     class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
-                <div class="sidebar-heading px-4 mt-3 mb-2 text-muted text-uppercase"
-                    style="font-size: 0.75rem; font-weight: 700;">Quản lý đào tạo</div>
+                <div class="sidebar-heading">Quản lý đào tạo</div>
                 <a href="{{ route('admin.faculties.index') }}"
                     class="{{ request()->routeIs('admin.faculties.*') ? 'active' : '' }}">
                     <i class="fas fa-building"></i> Khoa
@@ -104,8 +103,7 @@
                     <i class="fas fa-chalkboard"></i> Lớp học phần
                 </a>
 
-                <div class="sidebar-heading px-4 mt-3 mb-2 text-muted text-uppercase"
-                    style="font-size: 0.75rem; font-weight: 700;">Người dùng</div>
+                <div class="sidebar-heading">Người dùng</div>
                 <a href="{{ route('admin.students.index') }}"
                     class="{{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fas fa-user-graduate"></i> Sinh viên
@@ -115,11 +113,14 @@
                     <i class="fas fa-chalkboard-teacher"></i> Giảng viên
                 </a>
 
-                <div class="sidebar-heading px-4 mt-3 mb-2 text-muted text-uppercase"
-                    style="font-size: 0.75rem; font-weight: 700;">Hệ thống</div>
+                <div class="sidebar-heading">Hệ thống</div>
                 <a href="{{ route('admin.statistics.index') }}"
                     class="{{ request()->routeIs('admin.statistics.*') ? 'active' : '' }}">
                     <i class="fas fa-chart-pie"></i> Thống kê
+                </a>
+                <a href="{{ route('admin.notifications.index') }}"
+                    class="{{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
+                    <i class="fas fa-bell"></i> Quản lý thông báo
                 </a>
             </div>
         </div>
@@ -146,9 +147,30 @@
         </div>
     </div>
 
+    @stack('modals')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // SweetAlert2 for Session Messages
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: "{{ session('success') }}",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            @endif
+
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: "{{ session('error') }}",
+                });
+            @endif
+
             // Auto-hide alerts after 2 seconds
             const alerts = document.querySelectorAll('.alert-floating');
             alerts.forEach(function(alert) {

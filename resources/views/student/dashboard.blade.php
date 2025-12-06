@@ -128,10 +128,43 @@
                     <i class="fas fa-bullhorn"></i>
                     <h5 class="mb-0">Thông báo</h5>
                 </div>
-                <div class="card-body text-center py-5">
-                    <img src="https://cdni.iconscout.com/illustration/premium/thumb/no-data-found-8867280-7265556.png"
-                        alt="No Data" style="width: 150px; opacity: 0.7;">
-                    <p class="text-muted mt-3">Chưa có thông báo mới.</p>
+                <div class="card-body">
+                    @if ($notifications->isEmpty())
+                        <div class="text-center py-5">
+                            <img src="https://cdni.iconscout.com/illustration/premium/thumb/no-data-found-8867280-7265556.png"
+                                alt="No Data" style="width: 150px; opacity: 0.7;">
+                            <p class="text-muted mt-3">Chưa có thông báo mới.</p>
+                        </div>
+                    @else
+                        <div class="list-group list-group-flush">
+                            @foreach ($notifications as $notification)
+                                <div class="list-group-item flex-column align-items-start">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 fw-bold">{{ $notification->data['title'] }}</h6>
+                                        <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                                    </div>
+                                    <div class="mb-1 text-sm">{!! \Illuminate\Support\Str::limit(strip_tags($notification->data['message']), 100) !!}</div>
+                                    <a href="{{ route('student.notifications.index') }}"
+                                        class="small text-decoration-none">Xem chi tiết</a>
+                                    @if (!empty($notification->data['attachment_url']))
+                                        <div class="mb-2">
+                                            <a href="{{ $notification->data['attachment_url'] }}" target="_blank"
+                                                class="text-primary text-decoration-none">
+                                                <i class="fas fa-paperclip me-1"></i>
+                                                {{ $notification->data['original_attachment_name'] ?? 'Tệp đính kèm' }}
+                                            </a>
+                                        </div>
+                                    @endif
+                                    <small class="text-muted">
+                                        <i class="fas fa-user-circle me-1"></i>
+                                        {{ $notification->data['sender_name'] }}
+                                        <span
+                                            class="badge bg-light text-dark border ms-1">{{ $notification->data['sender_role'] }}</span>
+                                    </small>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

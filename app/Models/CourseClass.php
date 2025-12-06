@@ -27,6 +27,8 @@ class CourseClass extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'period_from' => 'integer',
+        'period_to' => 'integer',
     ];
 
     public function course()

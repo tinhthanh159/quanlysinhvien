@@ -13,12 +13,22 @@ class Course extends Model
     protected $fillable = [
         'code',
         'name',
+        'major_id',
         'number_of_credits',
         'theory_hours',
         'practice_hours',
         'description',
-        'status'
+        'status',
     ];
+
+    protected $casts = [
+        'status' => 'string',
+    ];
+
+    public function major()
+    {
+        return $this->belongsTo(Major::class);
+    }
 
     public function courseClasses()
     {

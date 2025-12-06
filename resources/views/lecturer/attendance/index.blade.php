@@ -10,6 +10,8 @@
                 Quay lại danh sách lớp</a>
             <a href="{{ route('lecturer.attendance.create_session', $courseClass) }}" class="btn btn-success mb-3"><i
                     class="fas fa-plus"></i> Tạo buổi điểm danh mới</a>
+            <a href="{{ route('lecturer.attendance.statistics', $courseClass) }}" class="btn btn-info mb-3 text-white"><i
+                    class="fas fa-chart-bar"></i> Thống kê</a>
 
             <table class="table table-bordered table-hover">
                 <thead class="table-light">

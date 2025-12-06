@@ -17,15 +17,12 @@ class GradeSeeder extends Seeder
                 $attendanceScore = rand(5, 10);
                 $midtermScore = rand(4, 10);
                 $finalScore = rand(4, 10);
-                $totalScore = ($attendanceScore * 0.1) + ($midtermScore * 0.3) + ($finalScore * 0.6);
-
                 Grade::create([
                     'course_class_id' => $class->id,
                     'student_id' => $student->id,
                     'attendance_score' => $attendanceScore,
                     'midterm_score' => $midtermScore,
                     'final_score' => $finalScore,
-                    'total_score' => $totalScore,
                     'status' => 'active',
                 ]);
             }

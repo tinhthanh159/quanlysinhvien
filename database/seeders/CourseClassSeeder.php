@@ -15,11 +15,20 @@ class CourseClassSeeder extends Seeder
     {
         $courses = Course::all();
         $lecturers = Lecturer::all();
-        $students = Student::all();
+        $students = Student::with('class')->get();
 
         if ($courses->isEmpty() || $lecturers->isEmpty() || $students->isEmpty()) {
             return;
         }
+
+        // Tracking schedules: [id => [day => [period => true]]]
+        $lecturerSchedule = [];
+        $classroomSchedule = []; // [room_name => [day => [period => true]]]
+        $studentSchedule = [];
+
+        $days = ['2', '3', '4', '5', '6', '7']; // Mon-Sat
+        $rooms = [];
+        for ($r = 101; $r <= 110; $r++) $rooms[] = "P$r"; // Limit rooms to force some contention/logic
 
         foreach ($courses as $course) {
             // Create 2 classes for each course
@@ -27,43 +36,112 @@ class CourseClassSeeder extends Seeder
                 $lecturer = $lecturers->random();
                 $startDate = Carbon::now()->subMonths(rand(0, 4));
                 $endDate = $startDate->copy()->addMonths(4);
-
-                $session = rand(0, 1) ? 'morning' : 'afternoon';
-                // Use course credits as duration, clamped between 2 and 5
                 $duration = max(2, min(5, $course->number_of_credits));
 
-                if ($session === 'morning') {
-                    // Morning: periods 1-5
-                    $maxStart = 5 - $duration + 1;
-                    $periodFrom = rand(1, $maxStart);
+                // Try to find a valid slot
+                $attempts = 0;
+                $slotFound = false;
+                $selectedDay = null;
+                $selectedPeriodFrom = null;
+                $selectedPeriodTo = null;
+                $selectedRoom = null;
+
+                while ($attempts < 50 && !$slotFound) {
+                    $attempts++;
+                    $day = $days[array_rand($days)];
+                    $session = rand(0, 1) ? 'morning' : 'afternoon';
+
+                    if ($session === 'morning') {
+                        $maxStart = 5 - $duration + 1;
+                        $periodFrom = rand(1, $maxStart);
+                    } else {
+                        $maxStart = 10 - $duration + 1;
+                        $periodFrom = rand(6, $maxStart);
+                    }
                     $periodTo = $periodFrom + $duration - 1;
-                } else {
-                    // Afternoon: periods 6-10
-                    $maxStart = 10 - $duration + 1;
-                    $periodFrom = rand(6, $maxStart);
-                    $periodTo = $periodFrom + $duration - 1;
+
+                    // Check Lecturer Availability
+                    if ($this->isBusy($lecturerSchedule, $lecturer->id, $day, $periodFrom, $periodTo)) {
+                        continue;
+                    }
+
+                    // Find a free room
+                    $room = null;
+                    shuffle($rooms);
+                    foreach ($rooms as $r) {
+                        if (!$this->isBusy($classroomSchedule, $r, $day, $periodFrom, $periodTo)) {
+                            $room = $r;
+                            break;
+                        }
+                    }
+
+                    if ($room) {
+                        $slotFound = true;
+                        $selectedDay = $day;
+                        $selectedPeriodFrom = $periodFrom;
+                        $selectedPeriodTo = $periodTo;
+                        $selectedRoom = $room;
+                    }
                 }
 
-                $courseClass = CourseClass::create([
-                    'course_id' => $course->id,
-                    'lecturer_id' => $lecturer->id,
-                    'classroom' => 'P' . rand(100, 500),
-                    'semester' => 1,
-                    'school_year' => '2025-2026',
-                    'day_of_week' => rand(2, 7), // Mon-Sat
-                    'period_from' => $periodFrom,
-                    'period_to' => $periodTo,
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                    'status' => $endDate->isPast() ? 'completed' : 'active',
-                ]);
+                if ($slotFound) {
+                    // Mark schedules as busy
+                    $this->markBusy($lecturerSchedule, $lecturer->id, $selectedDay, $selectedPeriodFrom, $selectedPeriodTo);
+                    $this->markBusy($classroomSchedule, $selectedRoom, $selectedDay, $selectedPeriodFrom, $selectedPeriodTo);
 
-                // Enroll random students (10-20 students per class)
-                $enrolledStudents = $students->random(rand(10, 20));
-                foreach ($enrolledStudents as $student) {
-                    $courseClass->students()->attach($student->id, ['enrolled_at' => now(), 'status' => 'enrolled']);
+                    $courseClass = CourseClass::create([
+                        'course_id' => $course->id,
+                        'lecturer_id' => $lecturer->id,
+                        'classroom' => $selectedRoom,
+                        'semester' => 1,
+                        'school_year' => '2025-2026',
+                        'day_of_week' => $selectedDay,
+                        'period_from' => $selectedPeriodFrom,
+                        'period_to' => $selectedPeriodTo,
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'status' => $endDate->isPast() ? 'completed' : 'active',
+                    ]);
+
+                    // Enroll Students
+                    $enrolledCount = 0;
+                    $targetEnrollment = rand(10, 20);
+
+                    // Filter students belonging to the same major as the course
+                    $eligibleStudents = $students->filter(function ($student) use ($course) {
+                        return $student->class && $student->class->major_id == $course->major_id;
+                    });
+
+                    // Shuffle eligible students to randomize enrollment
+                    $shuffledStudents = $eligibleStudents->shuffle();
+
+                    foreach ($shuffledStudents as $student) {
+                        if ($enrolledCount >= $targetEnrollment) break;
+
+                        if (!$this->isBusy($studentSchedule, $student->id, $selectedDay, $selectedPeriodFrom, $selectedPeriodTo)) {
+                            $courseClass->students()->attach($student->id, ['enrolled_at' => now(), 'status' => 'enrolled']);
+                            $this->markBusy($studentSchedule, $student->id, $selectedDay, $selectedPeriodFrom, $selectedPeriodTo);
+                            $enrolledCount++;
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    private function isBusy($schedule, $id, $day, $start, $end)
+    {
+        if (!isset($schedule[$id][$day])) return false;
+        for ($p = $start; $p <= $end; $p++) {
+            if (isset($schedule[$id][$day][$p])) return true;
+        }
+        return false;
+    }
+
+    private function markBusy(&$schedule, $id, $day, $start, $end)
+    {
+        for ($p = $start; $p <= $end; $p++) {
+            $schedule[$id][$day][$p] = true;
         }
     }
 }

@@ -20,7 +20,7 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     $user = Illuminate\Support\Facades\Auth::user();
     if ($user->role === 'admin') {
-        return redirect()->route('admin.statistics.index'); // Admin dashboard
+        return redirect()->route('admin.dashboard'); // Admin dashboard
     } elseif ($user->role === 'lecturer') {
         return redirect()->route('lecturer.dashboard');
     } elseif ($user->role === 'student') {
@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
 
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('faculties', FacultyController::class);
     Route::resource('majors', MajorController::class);
     Route::resource('classes', ClassController::class);
@@ -66,6 +67,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Statistics Route
     Route::get('statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+
+    // Notifications
+    Route::get('notifications', [App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/create', [App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('notifications.create');
+    Route::post('notifications', [App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('notifications.store');
 });
 
 // Lecturer Routes
@@ -80,12 +86,23 @@ Route::middleware(['auth', 'role:lecturer'])->prefix('lecturer')->name('lecturer
     Route::post('course_classes/{courseClass}/attendance', [App\Http\Controllers\Lecturer\AttendanceController::class, 'storeSession'])->name('attendance.store_session');
     Route::get('course_classes/{courseClass}/attendance/{session}', [App\Http\Controllers\Lecturer\AttendanceController::class, 'showSession'])->name('attendance.show_session');
     Route::post('course_classes/{courseClass}/attendance/{session}', [App\Http\Controllers\Lecturer\AttendanceController::class, 'updateAttendance'])->name('attendance.update_attendance');
+    Route::get('course_classes/{courseClass}/attendance/{session}/data', [App\Http\Controllers\Lecturer\AttendanceController::class, 'getAttendanceData'])->name('attendance.get_data');
+    Route::get('course_classes/{courseClass}/attendance/{session}/refresh-qr', [App\Http\Controllers\Lecturer\AttendanceController::class, 'refreshQr'])->name('attendance.refresh_qr');
+    Route::get('course_classes/{courseClass}/attendance/statistics/view', [App\Http\Controllers\Lecturer\AttendanceController::class, 'statistics'])->name('attendance.statistics');
+    Route::post('course_classes/{courseClass}/attendance/statistics/{student}/send-ban-email', [App\Http\Controllers\Lecturer\AttendanceController::class, 'sendBanEmail'])->name('attendance.send_ban_email');
 
     // Grades
     Route::get('course_classes/{courseClass}/grades', [App\Http\Controllers\Lecturer\GradeController::class, 'index'])->name('grades.index');
     Route::post('course_classes/{courseClass}/grades', [App\Http\Controllers\Lecturer\GradeController::class, 'update'])->name('grades.update');
     Route::get('course_classes/{courseClass}/grades/export', [App\Http\Controllers\Lecturer\GradeController::class, 'export'])->name('grades.export');
     Route::post('course_classes/{courseClass}/grades/import', [App\Http\Controllers\Lecturer\GradeController::class, 'import'])->name('grades.import');
+    Route::post('grades/{grade}/send-warning', [App\Http\Controllers\Lecturer\GradeController::class, 'sendWarning'])->name('grades.send_warning');
+
+    // Notifications
+    Route::get('notifications', [App\Http\Controllers\Lecturer\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/create', [App\Http\Controllers\Lecturer\NotificationController::class, 'create'])->name('notifications.create');
+    Route::post('notifications', [App\Http\Controllers\Lecturer\NotificationController::class, 'store'])->name('notifications.store');
+    Route::post('notifications/{id}/read', [App\Http\Controllers\Lecturer\NotificationController::class, 'markAsRead'])->name('notifications.read');
 });
 
 // Student Routes
@@ -93,6 +110,13 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/dashboard', [App\Http\Controllers\Student\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/schedule', [App\Http\Controllers\Student\DashboardController::class, 'schedule'])->name('schedule');
     Route::get('/grades', [App\Http\Controllers\Student\DashboardController::class, 'grades'])->name('grades');
+    Route::get('/profile', [App\Http\Controllers\Student\ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile/avatar', [App\Http\Controllers\Student\ProfileController::class, 'updateAvatar'])->name('profile.update_avatar');
+    Route::post('/profile/password', [App\Http\Controllers\Student\ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Notifications
+    Route::get('/notifications', [App\Http\Controllers\Student\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\Student\NotificationController::class, 'markAsRead'])->name('notifications.read');
 });
 
 Route::get('/attendance/checkin/{token}', [AttendanceController::class, 'checkin'])->middleware(['auth'])->name('attendance.checkin');

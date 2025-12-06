@@ -24,12 +24,16 @@
                     </thead>
                     <tbody>
                         <!-- Morning Session (Periods 1-5) -->
-                        <tr class="table-secondary">
-                            <td colspan="8" class="fw-bold text-start ps-3 text-uppercase">Buổi Sáng</td>
+                        <tr class="table-light">
+                            <td colspan="8"
+                                class="fw-bold text-start ps-4 text-uppercase text-primary bg-light border-bottom-0 py-3">
+                                <i class="fas fa-sun me-2 text-warning"></i>Buổi Sáng
+                            </td>
                         </tr>
                         @for ($i = 1; $i <= 5; $i++)
                             <tr>
-                                <td class="fw-bold bg-light">Tiết {{ $i }}</td>
+                                <td class="fw-bold text-secondary bg-light align-middle" style="width: 100px;">Tiết
+                                    {{ $i }}</td>
                                 @foreach (['2', '3', '4', '5', '6', '7', 'CN'] as $day)
                                     @php
                                         $class = $classes->first(function ($c) use ($day, $i) {
@@ -44,35 +48,41 @@
 
                                     @if ($isStart)
                                         <td rowspan="{{ $class->period_to - $class->period_from + 1 }}"
-                                            class="bg-primary bg-opacity-10 border-primary align-middle">
-                                            <div
-                                                class="p-2 rounded border border-primary bg-white shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <strong class="text-primary d-block">{{ $class->course->name }}</strong>
-                                                <small class="text-muted d-block">{{ $class->course->code }}</small>
-                                                <div class="mt-1">
-                                                    <span class="badge bg-primary">
-                                                        <i class="fas fa-map-marker-alt me-1"></i>{{ $class->classroom }}
-                                                    </span>
+                                            class="align-middle p-0 border position-relative" style="height: 1px;">
+                                            <div class="d-flex flex-column justify-content-center p-2 h-100 w-100"
+                                                style="background-color: #e0e7ff; color: #312e81; min-height: 100%;">
+                                                <div class="fw-bold text-primary mb-1">{{ $class->course->name }}</div>
+                                                <div class="small mb-1">
+                                                    <span class="fw-semibold">{{ $class->course->code }}</span>
+                                                    <span class="mx-1">|</span>
+                                                    <span>Tiết {{ $class->period_from }}-{{ $class->period_to }}</span>
                                                 </div>
-                                                <small class="text-muted mt-1 d-block">
-                                                    (Tiết {{ $class->period_from }} - {{ $class->period_to }})
-                                                </small>
+                                                <div class="small text-muted">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>{{ $class->classroom }}
+                                                </div>
+                                                <div class="small text-muted">
+                                                    <i
+                                                        class="fas fa-chalkboard-teacher me-1"></i>{{ $class->lecturer->full_name }}
+                                                </div>
                                             </div>
                                         </td>
                                     @elseif (!$isContinuation)
-                                        <td></td>
+                                        <td class="align-middle border"></td>
                                     @endif
                                 @endforeach
                             </tr>
                         @endfor
 
                         <!-- Afternoon Session (Periods 6-10) -->
-                        <tr class="table-secondary">
-                            <td colspan="8" class="fw-bold text-start ps-3 text-uppercase">Buổi Chiều</td>
+                        <tr class="table-light">
+                            <td colspan="8"
+                                class="fw-bold text-start ps-4 text-uppercase text-primary bg-light border-bottom-0 py-3 border-top">
+                                <i class="fas fa-moon me-2 text-info"></i>Buổi Chiều
+                            </td>
                         </tr>
                         @for ($i = 6; $i <= 10; $i++)
                             <tr>
-                                <td class="fw-bold bg-light">Tiết {{ $i }}</td>
+                                <td class="fw-bold text-secondary bg-light align-middle">Tiết {{ $i }}</td>
                                 @foreach (['2', '3', '4', '5', '6', '7', 'CN'] as $day)
                                     @php
                                         $class = $classes->first(function ($c) use ($day, $i) {
@@ -87,23 +97,26 @@
 
                                     @if ($isStart)
                                         <td rowspan="{{ $class->period_to - $class->period_from + 1 }}"
-                                            class="bg-primary bg-opacity-10 border-primary align-middle">
-                                            <div
-                                                class="p-2 rounded border border-primary bg-white shadow-sm h-100 d-flex flex-column justify-content-center">
-                                                <strong class="text-primary d-block">{{ $class->course->name }}</strong>
-                                                <small class="text-muted d-block">{{ $class->course->code }}</small>
-                                                <div class="mt-1">
-                                                    <span class="badge bg-primary">
-                                                        <i class="fas fa-map-marker-alt me-1"></i>{{ $class->classroom }}
-                                                    </span>
+                                            class="align-middle p-0 border position-relative" style="height: 1px;">
+                                            <div class="d-flex flex-column justify-content-center p-2 h-100 w-100"
+                                                style="background-color: #dbeafe; color: #1e3a8a; min-height: 100%;">
+                                                <div class="fw-bold text-primary mb-1">{{ $class->course->name }}</div>
+                                                <div class="small mb-1">
+                                                    <span class="fw-semibold">{{ $class->course->code }}</span>
+                                                    <span class="mx-1">|</span>
+                                                    <span>Tiết {{ $class->period_from }}-{{ $class->period_to }}</span>
                                                 </div>
-                                                <small class="text-muted mt-1 d-block">
-                                                    (Tiết {{ $class->period_from }} - {{ $class->period_to }})
-                                                </small>
+                                                <div class="small text-muted">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>{{ $class->classroom }}
+                                                </div>
+                                                <div class="small text-muted">
+                                                    <i
+                                                        class="fas fa-chalkboard-teacher me-1"></i>{{ $class->lecturer->full_name }}
+                                                </div>
                                             </div>
                                         </td>
                                     @elseif (!$isContinuation)
-                                        <td></td>
+                                        <td class="align-middle border"></td>
                                     @endif
                                 @endforeach
                             </tr>

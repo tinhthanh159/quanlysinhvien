@@ -66,6 +66,7 @@
                             <th>Điểm cuối kỳ (60%)</th>
                             <th>Tổng kết</th>
                             <th>GPA (4.0)</th>
+                            <th>Điểm chữ</th>
                             <th>Trạng thái</th>
                             <th>Hành động</th>
                         </tr>
@@ -95,6 +96,9 @@
                                 </td>
                                 <td>
                                     <strong>{{ number_format($grade->gpa, 1) }}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ $grade->letter_grade }}</strong>
                                 </td>
                                 <td>
                                     <span class="badge bg-{{ $grade->total_score >= 4 ? 'success' : 'danger' }}">

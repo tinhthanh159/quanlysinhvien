@@ -22,7 +22,8 @@ class Student extends Model
         'class_id',
         'major_id',
         'faculty_id',
-        'status'
+        'status',
+        'avatar'
     ];
 
     protected $casts = [

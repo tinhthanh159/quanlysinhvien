@@ -25,6 +25,8 @@ class DashboardController extends Controller
             ->with('course')
             ->get();
 
+        $notifications = auth()->user()->notifications()->latest()->take(3)->get();
+
         // Get today's schedule
         $today = now();
         $dayOfWeekMap = [
@@ -44,7 +46,7 @@ class DashboardController extends Controller
             ->orderBy('period_from')
             ->get();
 
-        return view('lecturer.dashboard', compact('lecturer', 'activeClasses', 'todayClasses'));
+        return view('lecturer.dashboard', compact('lecturer', 'activeClasses', 'todayClasses', 'notifications'));
     }
 
     public function schedule()

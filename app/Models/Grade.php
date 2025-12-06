@@ -18,6 +18,7 @@ class Grade extends Model
         'other_score',
         'total_score',
         'gpa',
+        'letter_grade',
         'status',
         'note'
     ];
@@ -32,6 +33,15 @@ class Grade extends Model
         return $this->belongsTo(Student::class);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($grade) {
+            $grade->calculateTotal();
+        });
+    }
+
     public function calculateTotal()
     {
         $attendance = $this->attendance_score ?? 0;
@@ -41,15 +51,32 @@ class Grade extends Model
         // Default weights: 10% - 30% - 60%
         $this->total_score = ($attendance * 0.1) + ($midterm * 0.3) + ($final * 0.6);
 
-        // Convert 10-scale to 4-scale
-        if ($this->total_score >= 8.5) $this->gpa = 4.0;
-        elseif ($this->total_score >= 8.0) $this->gpa = 3.5;
-        elseif ($this->total_score >= 7.0) $this->gpa = 3.0;
-        elseif ($this->total_score >= 6.5) $this->gpa = 2.5;
-        elseif ($this->total_score >= 5.5) $this->gpa = 2.0;
-        elseif ($this->total_score >= 5.0) $this->gpa = 1.5;
-        elseif ($this->total_score >= 4.0) $this->gpa = 1.0;
-        else $this->gpa = 0.0;
+        // Convert 10-scale to 4-scale and Letter Grade
+        if ($this->total_score >= 8.5) {
+            $this->gpa = 4.0;
+            $this->letter_grade = 'A';
+        } elseif ($this->total_score >= 7.8) {
+            $this->gpa = 3.5;
+            $this->letter_grade = 'B+';
+        } elseif ($this->total_score >= 7.0) {
+            $this->gpa = 3.0;
+            $this->letter_grade = 'B';
+        } elseif ($this->total_score >= 6.3) {
+            $this->gpa = 2.5;
+            $this->letter_grade = 'C+';
+        } elseif ($this->total_score >= 5.5) {
+            $this->gpa = 2.0;
+            $this->letter_grade = 'C';
+        } elseif ($this->total_score >= 4.8) {
+            $this->gpa = 1.5;
+            $this->letter_grade = 'D+';
+        } elseif ($this->total_score >= 4.0) {
+            $this->gpa = 1.0;
+            $this->letter_grade = 'D';
+        } else {
+            $this->gpa = 0.0;
+            $this->letter_grade = 'F';
+        }
 
         return $this->total_score;
     }

@@ -21,7 +21,7 @@ class DashboardController extends Controller
 
         // Get enrolled classes
         $enrolledClasses = $student->courseClasses()
-            ->wherePivot('status', 'active') // Assuming pivot has status or we check class status
+            ->wherePivot('status', 'enrolled') // Changed from 'active' to 'enrolled'
             ->where('course_classes.status', 'active')
             ->with('course', 'lecturer')
             ->get();
@@ -43,7 +43,9 @@ class DashboardController extends Controller
             return $class->day_of_week == $currentDay;
         });
 
-        return view('student.dashboard', compact('student', 'enrolledClasses', 'todayClasses'));
+        $notifications = auth()->user()->notifications()->latest()->take(3)->get();
+
+        return view('student.dashboard', compact('student', 'enrolledClasses', 'todayClasses', 'notifications'));
     }
 
     public function schedule()
@@ -52,7 +54,9 @@ class DashboardController extends Controller
         $student = $user->student;
 
         $classes = $student->courseClasses()
+            ->wherePivot('status', 'enrolled')
             ->where('course_classes.status', 'active')
+            ->with('course')
             ->orderBy('day_of_week')
             ->orderBy('period_from')
             ->get();

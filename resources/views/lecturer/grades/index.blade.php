@@ -65,7 +65,10 @@
                             <th>Điểm giữa kỳ (30%)</th>
                             <th>Điểm cuối kỳ (60%)</th>
                             <th>Tổng kết</th>
+                            <th>GPA (4.0)</th>
+                            <th>Điểm chữ</th>
                             <th>Trạng thái</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,9 +95,23 @@
                                     <strong>{{ number_format($grade->total_score, 1) }}</strong>
                                 </td>
                                 <td>
+                                    <strong>{{ number_format($grade->gpa, 1) }}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ $grade->letter_grade }}</strong>
+                                </td>
+                                <td>
                                     <span class="badge bg-{{ $grade->total_score >= 4 ? 'success' : 'danger' }}">
                                         {{ $grade->total_score >= 4 ? 'Đạt' : 'Trượt' }}
                                     </span>
+                                </td>
+                                <td>
+                                    @if ($grade->gpa < 2.0)
+                                        <button type="submit" form="send-warning-{{ $grade->id }}"
+                                            class="btn btn-sm btn-warning" title="Gửi cảnh báo">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -102,6 +119,16 @@
                 </table>
                 <button type="submit" class="btn btn-primary">Lưu bảng điểm</button>
             </form>
+
+            {{-- Hidden forms for sending warnings --}}
+            @foreach ($grades as $grade)
+                @if ($grade->gpa < 2.0)
+                    <form id="send-warning-{{ $grade->id }}"
+                        action="{{ route('lecturer.grades.send_warning', $grade) }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                @endif
+            @endforeach
         </div>
     </div>
 @endsection

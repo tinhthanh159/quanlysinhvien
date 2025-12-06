@@ -32,6 +32,7 @@ class GradesExport implements FromCollection, WithHeadings, WithMapping
             'Điểm GK (30%)',
             'Điểm CK (60%)',
             'Tổng kết',
+            'GPA (4.0)',
             'Điểm chữ',
         ];
     }
@@ -45,6 +46,7 @@ class GradesExport implements FromCollection, WithHeadings, WithMapping
             $grade->midterm_score,
             $grade->final_score,
             $grade->total_score,
+            $grade->gpa,
             $grade->letter_grade,
         ];
     }
