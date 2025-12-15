@@ -103,6 +103,10 @@ Route::middleware(['auth', 'role:lecturer'])->prefix('lecturer')->name('lecturer
     Route::get('notifications/create', [App\Http\Controllers\Lecturer\NotificationController::class, 'create'])->name('notifications.create');
     Route::post('notifications', [App\Http\Controllers\Lecturer\NotificationController::class, 'store'])->name('notifications.store');
     Route::post('notifications/{id}/read', [App\Http\Controllers\Lecturer\NotificationController::class, 'markAsRead'])->name('notifications.read');
+
+    // Statistics (Risk Analysis)
+    Route::get('statistics', [App\Http\Controllers\Lecturer\StatisticsController::class, 'index'])->name('statistics.index');
+    Route::post('statistics/warning', [App\Http\Controllers\Lecturer\StatisticsController::class, 'sendWarning'])->name('statistics.warning');
 });
 
 // Student Routes

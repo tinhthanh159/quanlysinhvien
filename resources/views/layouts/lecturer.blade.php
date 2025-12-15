@@ -86,6 +86,10 @@
                     class="{{ request()->routeIs('lecturer.notifications.*') ? 'active' : '' }}">
                     <i class="fas fa-bell"></i> Quản lý thông báo
                 </a>
+                <a href="{{ route('lecturer.statistics.index') }}"
+                    class="{{ request()->routeIs('lecturer.statistics.*') ? 'active' : '' }}">
+                    <i class="fas fa-chart-bar"></i> Thống kê báo động
+                </a>
             </div>
         </div>
 
